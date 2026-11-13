@@ -1,0 +1,14 @@
+services:
+  source-db:
+    image: postgres:16
+    container_name: source-db
+    env_file: .env
+    command: ["postgres", "-c", "wal_level=logical"]
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d
+      - source_data:/var/lib/postgresql/data
+
+volumes:
+  source_data:
