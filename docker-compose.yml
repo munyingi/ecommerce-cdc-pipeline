@@ -63,5 +63,19 @@ services:
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://connect:8083
       DYNAMIC_CONFIG_ENABLED: "true"
 
+  warehouse-db:
+    image: postgres:16
+    container_name: warehouse-db
+    environment:
+      POSTGRES_USER: ${WH_USER}
+      POSTGRES_PASSWORD: ${WH_PASSWORD}
+      POSTGRES_DB: ${WH_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./warehouse/init:/docker-entrypoint-initdb.d
+      - warehouse_data:/var/lib/postgresql/data
+
 volumes:
   source_data:
+  warehouse_data:
