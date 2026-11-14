@@ -1,0 +1,59 @@
+# Continuous integration: runs on every push and pull request.
+#  1. dbt:       builds every model and runs all data tests against a fresh Postgres
+#  2. dashboard: opens every dashboard page on the DuckDB snapshot and fails on any error
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  dbt:
+    name: dbt build and test
+    runs-on: ubuntu-latest
+    services:
+      warehouse:
+        image: postgres:16
+        env:
+          POSTGRES_USER: warehouse
+          POSTGRES_PASSWORD: warehouse_pw
+          POSTGRES_DB: warehouse
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U warehouse"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      WH_HOST: localhost
+      WH_PORT: "5434"
+      WH_USER: warehouse
+      WH_PASSWORD: warehouse_pw
+      WH_DB: warehouse
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dbt
+        run: pip install "dbt-core==1.12.7" "dbt-postgres==1.11.0"
+      - name: Create the raw CDC table (same script as Docker)
+        run: psql -h localhost -p 5434 -U warehouse -d warehouse -v ON_ERROR_STOP=1 -f warehouse/init/01_raw.sql
+        env:
+          PGPASSWORD: warehouse_pw
+      - name: dbt build (all models + all tests)
+        working-directory: dbt_shop
+        run: dbt build
+
+  dashboard:
+    name: Dashboard smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dashboard dependencies
+        run: pip install -r dashboard/requirements.txt pytest
+      - name: Open every page on the DuckDB snapshot
+        run: pytest -q tests/test_dashboard.py
