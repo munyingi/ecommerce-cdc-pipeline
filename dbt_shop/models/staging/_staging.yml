@@ -9,7 +9,8 @@ models:
       - name: cdc_op
         data_tests:
           - accepted_values:
-              values: ['c', 'u', 'd', 'r']
+              arguments:
+                values: ['c', 'u', 'd', 'r']
 
   - name: stg_products
     description: One row per CDC change event for a product.
@@ -27,7 +28,8 @@ models:
       - name: status
         data_tests:
           - accepted_values:
-              values: ['placed', 'paid', 'shipped', 'delivered', 'cancelled']
+              arguments:
+                values: ['placed', 'paid', 'shipped', 'delivered', 'cancelled']
 
   - name: stg_order_items
     description: One row per CDC change event for an order line.

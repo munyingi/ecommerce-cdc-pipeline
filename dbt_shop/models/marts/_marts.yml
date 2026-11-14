@@ -36,22 +36,56 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_customer')
-              field: customer_sk
+              arguments:
+                to: ref('dim_customer')
+                field: customer_sk
       - name: product_sk
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_product')
-              field: product_sk
+              arguments:
+                to: ref('dim_product')
+                field: product_sk
       - name: date_key
         data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
+              arguments:
+                to: ref('dim_date')
+                field: date_key
 
   - name: fct_orders
-    description: One row per order with lifecycle timestamps.
+    description: One row per order with lifecycle timestamps and city at order time.
     columns:
       - name: order_id
         data_tests: [unique, not_null]
+      - name: customer_sk
+        data_tests: [not_null]
+
+  - name: mart_daily_kpis
+    description: One row per day with the core commercial KPIs.
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: mart_customer_metrics
+    description: One row per ordering customer with lifetime value and RFM segment.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: rfm_segment
+        data_tests: [not_null]
+
+  - name: mart_cohort_retention
+    description: Retention and revenue by monthly acquisition cohort.
+    columns:
+      - name: cohort_month
+        data_tests: [not_null]
+
+  - name: mart_product_performance
+    description: One row per product with sales, price history and ABC class.
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: mart_product_price_versions
+    description: Demand (units per day) for each price version of each product.

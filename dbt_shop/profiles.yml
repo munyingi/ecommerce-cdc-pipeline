@@ -10,4 +10,3 @@ shop_warehouse:
       dbname: "{{ env_var('WH_DB', 'warehouse') }}"
       schema: analytics
       threads: 4
-      

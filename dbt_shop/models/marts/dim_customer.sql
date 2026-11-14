@@ -1,10 +1,11 @@
 -- SCD Type 2 customer dimension built from CDC change events.
--- One row per version of a customer, with a validity window.
+-- One row per version of a customer, with a validity window in BUSINESS time
+-- (effective_at = when the change happened in the shop, not when it was loaded).
 
 with changes as (
     select
         customer_id, first_name, last_name, email, phone, city, country,
-        created_at, is_deleted, changed_at, kafka_offset,
+        created_at, is_deleted, effective_at, kafka_offset,
         -- fingerprint of the attributes we track history for
         md5(concat_ws('|', first_name, last_name, email, phone,
                       city, country, is_deleted::text)) as attr_hash
@@ -14,7 +15,7 @@ with changes as (
 flagged as (
     select *,
         lag(attr_hash) over (
-            partition by customer_id order by changed_at, kafka_offset
+            partition by customer_id order by effective_at, kafka_offset
         ) as prev_hash
     from changes
 ),
@@ -28,11 +29,11 @@ versions as (
 windowed as (
     select *,
         row_number() over (
-            partition by customer_id order by changed_at, kafka_offset
+            partition by customer_id order by effective_at, kafka_offset
         ) as version_number,
-        lead(changed_at) over (
-            partition by customer_id order by changed_at, kafka_offset
-        ) as next_changed_at
+        lead(effective_at) over (
+            partition by customer_id order by effective_at, kafka_offset
+        ) as next_effective_at
     from versions
 )
 
@@ -47,10 +48,9 @@ select
     city,
     country,
     is_deleted,
-    -- the first version starts when the customer was created,
-    -- not when Debezium happened to snapshot them
-    case when version_number = 1 then least(created_at, changed_at)
-         else changed_at end                               as valid_from,
-    coalesce(next_changed_at, '9999-12-31'::timestamptz)   as valid_to,
-    next_changed_at is null                                as is_current
+    -- the first version starts when the customer was created
+    case when version_number = 1 then least(created_at, effective_at)
+         else effective_at end                             as valid_from,
+    coalesce(next_effective_at, '9999-12-31'::timestamptz) as valid_to,
+    next_effective_at is null                              as is_current
 from windowed

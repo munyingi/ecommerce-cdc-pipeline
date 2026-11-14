@@ -12,7 +12,7 @@ orders as (
     -- latest state of each order
     select distinct on (order_id) *
     from {{ ref('stg_orders') }}
-    order by order_id, changed_at desc, kafka_offset desc
+    order by order_id, effective_at desc, kafka_offset desc
 )
 
 select

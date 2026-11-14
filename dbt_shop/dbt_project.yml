@@ -5,6 +5,7 @@ profile: shop_warehouse
 
 model-paths: ["models"]
 macro-paths: ["macros"]
+test-paths: ["tests"]
 
 models:
   shop_warehouse:

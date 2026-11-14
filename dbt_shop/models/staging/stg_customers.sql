@@ -26,7 +26,13 @@ select
     op                                        as cdc_op,
     op = 'd'                                  as is_deleted,
     is_snapshot,
+    -- system time: when Postgres committed the change
     to_timestamp(source_ts_ms / 1000.0)       as changed_at,
+    -- business time: when the change happened in the shop
+    -- (updated_at from the app; deletes have no new updated_at, so use commit time)
+    case when op = 'd' then to_timestamp(source_ts_ms / 1000.0)
+         else coalesce((row_data->>'updated_at')::timestamptz,
+                       to_timestamp(source_ts_ms / 1000.0)) end as effective_at,
     source_lsn,
     kafka_offset
 from deduped
