@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: cdc_events
+        description: Every Debezium change event, landed unchanged by the Kafka consumer.
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: {count: 10, period: minute}
+          error_after: {count: 60, period: minute}
+        columns:
+          - name: event_id
+            data_tests: [unique, not_null]

@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: One row per CDC change event for a customer.
+    columns:
+      - name: customer_id
+        data_tests: [not_null]
+      - name: cdc_op
+        data_tests:
+          - accepted_values:
+              values: ['c', 'u', 'd', 'r']
+
+  - name: stg_products
+    description: One row per CDC change event for a product.
+    columns:
+      - name: product_id
+        data_tests: [not_null]
+      - name: price
+        data_tests: [not_null]
+
+  - name: stg_orders
+    description: One row per CDC change event for an order.
+    columns:
+      - name: order_id
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['placed', 'paid', 'shipped', 'delivered', 'cancelled']
+
+  - name: stg_order_items
+    description: One row per CDC change event for an order line.
+    columns:
+      - name: order_item_id
+        data_tests: [not_null]

@@ -1,0 +1,16 @@
+name: shop_warehouse
+version: "1.0.0"
+config-version: 2
+profile: shop_warehouse
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+models:
+  shop_warehouse:
+    staging:
+      +schema: staging
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
