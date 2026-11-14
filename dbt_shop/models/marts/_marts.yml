@@ -20,3 +20,38 @@ models:
         data_tests: [not_null]
       - name: price
         data_tests: [not_null]
+
+  - name: dim_date
+    description: One row per calendar day.
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: fct_order_items
+    description: One row per order line, linked to the dimension versions valid at order time.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk
+      - name: product_sk
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk
+      - name: date_key
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+  - name: fct_orders
+    description: One row per order with lifecycle timestamps.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
