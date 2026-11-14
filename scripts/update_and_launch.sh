@@ -6,11 +6,11 @@ cd "$(dirname "$0")/.."
 source .venv/bin/activate
 mkdir -p logs
 
-echo "1/5  Making sure the Docker stack is up..."
+echo "1/6  Making sure the Docker stack is up..."
 docker compose up -d
 docker compose ps --format "table {{.Name}}\t{{.Status}}"
 
-echo "2/5  Starting the CDC consumer in the background (log: logs/consumer.log)..."
+echo "2/6  Starting the CDC consumer in the background (log: logs/consumer.log)..."
 if pgrep -f "consumer/load_cdc.py" >/dev/null; then
   echo "     consumer already running"
 else
@@ -23,10 +23,10 @@ count() {
 }
 before=$(count)
 
-echo "3/5  Backfilling 12 months of shop history into the source database..."
+echo "3/6  Backfilling 12 months of shop history into the source database..."
 python generator/backfill.py
 
-echo "4/5  Waiting for Debezium -> Kafka -> consumer to land every event..."
+echo "4/6  Waiting for Debezium -> Kafka -> consumer to land every event..."
 last=-1; stable=0
 while [ "$stable" -lt 3 ]; do
   sleep 5
@@ -36,8 +36,12 @@ while [ "$stable" -lt 3 ]; do
   last=$now
 done
 
-echo "5/5  Rebuilding and testing the warehouse with dbt..."
+echo "5/6  Rebuilding and testing the warehouse with dbt..."
 (cd dbt_shop && dbt build)
+
+echo "6/6  Exporting the warehouse to DuckDB for the online dashboard..."
+pip install -q -r requirements.txt
+python scripts/export_duckdb.py
 
 echo
 echo "Done. Opening the dashboard (Ctrl+C to stop it)..."

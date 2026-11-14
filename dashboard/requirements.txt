@@ -1,0 +1,7 @@
+# Dependencies for the online dashboard (Streamlit Community Cloud reads this file
+# because it sits next to app.py). The full pipeline uses ../requirements.txt.
+streamlit==1.46.1
+duckdb==2.0.0
+pandas
+python-dotenv==1.2.4
+psycopg[binary]==3.2.3

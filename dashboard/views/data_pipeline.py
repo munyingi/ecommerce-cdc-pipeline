@@ -6,7 +6,7 @@ import altair as alt
 import streamlit as st
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # find db.py
-from db import explain, page_setup, query
+from db import explain, page_setup, query, snapshot_time
 
 page_setup("Data pipeline",
            "Can the numbers on the other pages be trusted? Freshness, volume and data quality.")
@@ -38,7 +38,11 @@ latency = None if h.avg_latency_s is None or h.avg_latency_s != h.avg_latency_s 
 status = ("🟢 Fresh" if lag_s < 120
           else "🟡 Delayed" if lag_s < 3600 else "🔴 Stale")
 c = st.columns(4)
-c[0].metric("Freshness", status, f"last event {lag_s:,} s ago", delta_color="off")
+snap = snapshot_time()
+if snap is None:
+    c[0].metric("Freshness", status, f"last event {lag_s:,} s ago", delta_color="off")
+else:
+    c[0].metric("Snapshot", f"{snap:%d %b %Y}", "online demo data", delta_color="off")
 c[1].metric("End-to-end CDC latency",
             f"{latency:.1f} s" if latency is not None else "idle")
 c[2].metric("Events in the last hour", f"{int(h.events_last_hour):,}")
